@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ReimburseFlow — Expense Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #13131a;
+  --surface2: #1c1c27;
+  --surface3: #252533;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --accent: #6c63ff;
+  --accent2: #a78bfa;
+  --accent3: #38bdf8;
+  --green: #34d399;
+  --red: #f87171;
+  --amber: #fbbf24;
+  --text: #f0f0f8;
+  --text2: #9090b0;
+  --text3: #5a5a7a;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --shadow: 0 8px 32px rgba(0,0,0,0.4);
+  --glow: 0 0 40px rgba(108,99,255,0.15);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+h1,h2,h3,h4{font-family:'Syne',sans-serif}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--surface)}
+::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:4px}
+
+/* ── SCREEN SYSTEM ── */
+.screen{display:none;min-height:100vh;animation:fadeIn .35s ease}
+.screen.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── AUTH SCREEN ── */
+#screen-auth{align-items:center;justify-content:center;position:relative;overflow:hidden}
+.auth-bg{position:absolute;inset:0;z-index:0}
+.auth-bg-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.25}
+.blob1{width:500px;height:500px;background:var(--accent);top:-100px;left:-100px}
+.blob2{width:400px;height:400px;background:var(--accent3);bottom:-80px;right:-80px}
+.blob3{width:300px;height:300px;background:#ec4899;top:40%;left:50%;transform:translate(-50%,-50%)}
+.auth-card{position:relative;z-index:1;background:rgba(19,19,26,0.85);backdrop-filter:blur(24px);border:1px solid var(--border2);border-radius:24px;padding:48px;width:100%;max-width:460px;box-shadow:var(--shadow),var(--glow)}
+.auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:36px}
+.auth-logo-icon{width:40px;height:40px;background:linear-gradient(135deg,var(--accent),var(--accent3));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.auth-logo-text{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--text)}
+.auth-logo-text span{color:var(--accent2)}
+.auth-tabs{display:flex;background:var(--surface2);border-radius:10px;padding:4px;margin-bottom:32px}
+.auth-tab{flex:1;padding:10px;text-align:center;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text2);transition:all .2s}
+.auth-tab.active{background:var(--accent);color:#fff;box-shadow:0 4px 12px rgba(108,99,255,0.4)}
+.auth-title{font-size:26px;font-weight:700;margin-bottom:6px}
+.auth-sub{font-size:14px;color:var(--text2);margin-bottom:28px}
+.form-group{margin-bottom:18px}
+.form-label{font-size:12px;font-weight:500;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;display:block}
+.form-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px 16px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:all .2s}
+.form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,99,255,0.15)}
+.form-input::placeholder{color:var(--text3)}
+.form-select{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M6 8L1 3h10z' fill='%239090b0'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+.btn{width:100%;padding:14px;border-radius:var(--radius-sm);border:none;cursor:pointer;font-family:'Syne',sans-serif;font-size:15px;font-weight:600;transition:all .25s;letter-spacing:.3px}
+.btn-primary{background:linear-gradient(135deg,var(--accent),#8b5cf6);color:#fff;box-shadow:0 4px 20px rgba(108,99,255,0.35)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(108,99,255,0.5)}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border2)}
+.btn-secondary:hover{background:var(--surface3)}
+.btn-sm{width:auto;padding:8px 16px;font-size:13px;border-radius:var(--radius-sm)}
+.btn-success{background:linear-gradient(135deg,#059669,#34d399);color:#fff}
+.btn-danger{background:linear-gradient(135deg,#dc2626,#f87171);color:#fff}
+.btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text2)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent)}
+.demo-hint{margin-top:20px;padding:14px;background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);border-radius:var(--radius-sm);font-size:12px;color:var(--text2);text-align:center}
+.demo-hint strong{color:var(--accent2)}
+
+/* ── APP LAYOUT ── */
+#screen-app{flex-direction:row}
+.sidebar{width:260px;min-height:100vh;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:24px 16px;position:sticky;top:0;flex-shrink:0}
+.sidebar-logo{display:flex;align-items:center;gap:10px;padding:8px 12px;margin-bottom:32px}
+.sidebar-logo-icon{width:34px;height:34px;background:linear-gradient(135deg,var(--accent),var(--accent3));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px}
+.sidebar-logo-text{font-family:'Syne',sans-serif;font-size:17px;font-weight:700}
+.sidebar-logo-text span{color:var(--accent2)}
+.sidebar-section{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:0 12px;margin-bottom:8px;margin-top:16px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:var(--radius-sm);cursor:pointer;font-size:14px;color:var(--text2);transition:all .2s;margin-bottom:2px;border:1px solid transparent}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:rgba(108,99,255,0.12);color:var(--accent2);border-color:rgba(108,99,255,0.2)}
+.nav-icon{font-size:16px;width:20px;text-align:center}
+.nav-badge{margin-left:auto;background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px}
+.sidebar-footer{margin-top:auto;padding-top:20px;border-top:1px solid var(--border)}
+.user-card{display:flex;align-items:center;gap:12px;padding:12px;border-radius:var(--radius-sm);background:var(--surface2)}
+.user-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;flex-shrink:0}
+.user-info{flex:1;min-width:0}
+.user-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-role{font-size:11px;color:var(--text2)}
+.logout-btn{width:28px;height:28px;border-radius:6px;background:transparent;border:1px solid var(--border);color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .2s;flex-shrink:0}
+.logout-btn:hover{background:var(--red);border-color:var(--red);color:#fff}
+
+/* ── MAIN CONTENT ── */
+.main{flex:1;overflow-y:auto;padding:32px}
+.page{display:none;animation:fadeIn .3s ease}
+.page.active{display:block}
+.page-header{margin-bottom:28px}
+.page-title{font-size:28px;font-weight:800;margin-bottom:4px}
+.page-sub{font-size:14px;color:var(--text2)}
+
+/* ── STATS GRID ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:28px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden;transition:all .2s}
+.stat-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat-card.purple::before{background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.stat-card.blue::before{background:linear-gradient(90deg,var(--accent3),#818cf8)}
+.stat-card.green::before{background:linear-gradient(90deg,var(--green),#6ee7b7)}
+.stat-card.amber::before{background:linear-gradient(90deg,var(--amber),#fde68a)}
+.stat-card.red::before{background:linear-gradient(90deg,var(--red),#fca5a5)}
+.stat-icon{font-size:22px;margin-bottom:12px}
+.stat-value{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;margin-bottom:4px}
+.stat-label{font-size:12px;color:var(--text2)}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.card-title{font-size:16px;font-weight:700}
+.card-sub{font-size:12px;color:var(--text2);margin-top:2px}
+
+/* ── TABLE ── */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
+td{padding:14px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,0.02)}
+.td-name{font-weight:500}
+.td-amount{font-family:'Syne',sans-serif;font-weight:600}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%}
+.badge-pending{background:rgba(251,191,36,0.12);color:var(--amber)}
+.badge-pending::before{background:var(--amber)}
+.badge-approved{background:rgba(52,211,153,0.12);color:var(--green)}
+.badge-approved::before{background:var(--green)}
+.badge-rejected{background:rgba(248,113,113,0.12);color:var(--red)}
+.badge-rejected::before{background:var(--red)}
+.badge-role{padding:3px 9px;border-radius:6px;font-size:11px;font-weight:600}
+.badge-admin{background:rgba(167,139,250,0.15);color:var(--accent2)}
+.badge-manager{background:rgba(56,189,248,0.15);color:var(--accent3)}
+.badge-employee{background:rgba(52,211,153,0.15);color:var(--green)}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;animation:fadeIn .2s ease}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:32px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow),var(--glow)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.modal-title{font-size:20px;font-weight:700}
+.modal-close{width:32px;height:32px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.modal-close:hover{background:var(--red);border-color:var(--red);color:#fff}
+.modal-actions{display:flex;gap:10px;margin-top:24px;justify-content:flex-end}
+
+/* ── FORM GRID ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-grid.full .form-group{grid-column:1/-1}
+.form-group textarea{resize:vertical}
+
+/* ── APPROVAL FLOW ── */
+.flow-steps{display:flex;flex-direction:column;gap:0}
+.flow-step{display:flex;align-items:stretch;gap:0}
+.flow-step-line{display:flex;flex-direction:column;align-items:center;width:32px;flex-shrink:0}
+.flow-step-dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--border2);background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;z-index:1}
+.flow-step-dot.active{border-color:var(--accent);background:rgba(108,99,255,0.2);color:var(--accent2)}
+.flow-step-dot.done{border-color:var(--green);background:rgba(52,211,153,0.15);color:var(--green)}
+.flow-step-dot.rejected{border-color:var(--red);background:rgba(248,113,113,0.15);color:var(--red)}
+.flow-connector{width:2px;flex:1;background:var(--border);margin:4px 0}
+.flow-connector.done{background:var(--green)}
+.flow-step-content{flex:1;padding:0 0 20px 16px}
+.flow-step-title{font-size:13px;font-weight:600;margin-bottom:4px}
+.flow-step-meta{font-size:12px;color:var(--text2)}
+
+/* ── NOTIFICATION ── */
+.toast{position:fixed;bottom:24px;right:24px;padding:14px 20px;border-radius:12px;font-size:13px;font-weight:500;z-index:9999;animation:slideUp .3s ease;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow)}
+.toast-success{background:#065f46;border:1px solid var(--green);color:var(--green)}
+.toast-error{background:#7f1d1d;border:1px solid var(--red);color:var(--red)}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── OCR UPLOAD ── */
+.ocr-zone{border:2px dashed var(--border2);border-radius:var(--radius);padding:32px;text-align:center;cursor:pointer;transition:all .2s;position:relative}
+.ocr-zone:hover,.ocr-zone.dragover{border-color:var(--accent);background:rgba(108,99,255,0.05)}
+.ocr-zone-icon{font-size:36px;margin-bottom:12px}
+.ocr-zone-text{font-size:14px;color:var(--text2)}
+.ocr-zone-sub{font-size:12px;color:var(--text3);margin-top:6px}
+.ocr-result{background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:var(--radius-sm);padding:14px;margin-top:16px;font-size:13px}
+.ocr-result-title{font-weight:600;color:var(--green);margin-bottom:8px}
+
+/* ── APPROVAL CONFIG ── */
+.rule-builder{background:var(--surface2);border-radius:var(--radius);padding:20px;margin-top:16px}
+.rule-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.rule-tag{background:rgba(108,99,255,0.12);color:var(--accent2);border:1px solid rgba(108,99,255,0.2);border-radius:6px;padding:4px 10px;font-size:12px;font-weight:600}
+.approver-chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface3);border:1px solid var(--border);border-radius:20px;padding:6px 12px;font-size:12px;margin:4px}
+.approver-chip-remove{cursor:pointer;color:var(--text3);font-size:14px;line-height:1}
+.approver-chip-remove:hover{color:var(--red)}
+.step-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-bottom:12px;position:relative}
+.step-number{position:absolute;top:-10px;left:14px;background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px}
+
+/* ── CURRENCY BADGE ── */
+.currency-badge{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;font-weight:600;color:var(--accent2);display:inline-flex;align-items:center;gap:5px}
+
+/* ── PROGRESS BAR ── */
+.progress-bar{height:6px;background:var(--surface3);border-radius:3px;overflow:hidden;margin-top:8px}
+.progress-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .5s ease}
+
+/* ── EMPTY STATE ── */
+.empty-state{text-align:center;padding:48px 24px;color:var(--text3)}
+.empty-icon{font-size:40px;margin-bottom:12px}
+.empty-text{font-size:14px}
+
+/* ── GRID LAYOUTS ── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+
+/* ── ROLE COLORS ── */
+.avatar-admin{background:linear-gradient(135deg,#7c3aed,#a78bfa)}
+.avatar-manager{background:linear-gradient(135deg,#0ea5e9,#38bdf8)}
+.avatar-employee{background:linear-gradient(135deg,#059669,#34d399)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .sidebar{display:none}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .two-col,.three-col{grid-template-columns:1fr}
+  .form-grid{grid-template-columns:1fr}
+}
+
+/* ── MISC ── */
+.divider{height:1px;background:var(--border);margin:20px 0}
+.text-muted{color:var(--text2);font-size:13px}
+.text-sm{font-size:12px;color:var(--text3)}
+.fw-600{font-weight:600}
+.flex{display:flex}
+.flex-center{display:flex;align-items:center;justify-content:center}
+.flex-between{display:flex;align-items:center;justify-content:space-between}
+.gap-8{gap:8px}
+.gap-12{gap:12px}
+.mt-4{margin-top:4px}
+.mt-8{margin-top:8px}
+.mt-16{margin-top:16px}
+.mb-16{margin-bottom:16px}
+
+/* ── SEARCH ── */
+.search-bar{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 14px;flex:1;max-width:320px}
+.search-bar input{background:none;border:none;outline:none;color:var(--text);font-size:13px;width:100%;font-family:'DM Sans',sans-serif}
+.search-bar input::placeholder{color:var(--text3)}
+
+/* ── THRESHOLD RULE ── */
+.threshold-input{display:flex;align-items:center;gap:8px}
+.threshold-input input{width:80px}
+.threshold-input span{color:var(--text2);font-size:13px}
+
+/* ── COMMENT BOX ── */
+.comment{background:var(--surface2);border-radius:var(--radius-sm);padding:12px;margin-top:8px;font-size:13px;color:var(--text2);border-left:3px solid var(--accent)}
+
+/* ── CONVERSION DISPLAY ── */
+.conversion-row{display:flex;align-items:center;gap:8px;background:var(--surface2);border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;margin-top:8px}
+.conversion-arrow{color:var(--accent);font-size:18px}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════ AUTH SCREEN ══════════════════════════════ -->
+<div id="screen-auth" class="screen active">
+  <div class="auth-bg">
+    <div class="auth-bg-blob blob1"></div>
+    <div class="auth-bg-blob blob2"></div>
+    <div class="auth-bg-blob blob3"></div>
+  </div>
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">💸</div>
+      <div class="auth-logo-text">Reimburse<span>Flow</span></div>
+    </div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="switchAuthTab('login')">Sign In</div>
+      <div class="auth-tab" onclick="switchAuthTab('signup')">Sign Up</div>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="auth-login">
+      <div class="auth-title">Welcome back 👋</div>
+      <div class="auth-sub">Sign in to your expense dashboard</div>
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input class="form-input" type="email" id="login-email" placeholder="you@company.com"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" id="login-password" placeholder="••••••••"/>
+      </div>
+      <button class="btn btn-primary" onclick="handleLogin()">Sign In →</button>
+      <div class="demo-hint">
+        <strong>Demo Accounts:</strong><br/>
+        admin@demo.com | manager@demo.com | employee@demo.com<br/>
+        <span style="font-size:11px">(any password works)</span>
+      </div>
+    </div>
+
+    <!-- SIGNUP -->
+    <div id="auth-signup" style="display:none">
+      <div class="auth-title">Create account ✨</div>
+      <div class="auth-sub">Company + Admin auto-created on signup</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input class="form-input" id="signup-name" placeholder="John Doe"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" type="email" id="signup-email" placeholder="john@company.com"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Company Name</label>
+          <input class="form-input" id="signup-company" placeholder="Acme Corp"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Country</label>
+          <select class="form-input form-select" id="signup-country">
+            <option value="IN">India (INR)</option>
+            <option value="US">United States (USD)</option>
+            <option value="GB">United Kingdom (GBP)</option>
+            <option value="EU">Europe (EUR)</option>
+            <option value="JP">Japan (JPY)</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Password</label>
+          <input class="form-input" type="password" id="signup-password" placeholder="••••••••"/>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="handleSignup()">Create Account & Company →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ APP SCREEN ══════════════════════════════ -->
+<div id="screen-app" class="screen">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">💸</div>
+      <div class="sidebar-logo-text">Reimburse<span>Flow</span></div>
+    </div>
+
+    <div id="nav-menu"></div>
+
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar" id="sidebar-avatar"></div>
+        <div class="user-info">
+          <div class="user-name" id="sidebar-name">User</div>
+          <div class="user-role" id="sidebar-role">Role</div>
+        </div>
+        <button class="logout-btn" onclick="logout()" title="Logout">⏻</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- ── DASHBOARD PAGE ── -->
+    <div id="page-dashboard" class="page">
+      <div class="page-header flex-between">
+        <div>
+          <div class="page-title" id="dash-greeting">Dashboard</div>
+          <div class="page-sub" id="dash-company">Loading...</div>
+        </div>
+        <div class="currency-badge">🏦 <span id="dash-currency">INR</span></div>
+      </div>
+      <div class="stats-grid" id="dash-stats"></div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Recent Expenses</div><div class="card-sub">Latest submissions</div></div>
+          </div>
+          <div id="dash-recent-expenses"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Approval Pipeline</div><div class="card-sub">Current status</div></div>
+          </div>
+          <div id="dash-pipeline"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SUBMIT EXPENSE PAGE ── -->
+    <div id="page-submit" class="page">
+      <div class="page-header">
+        <div class="page-title">Submit Expense</div>
+        <div class="page-sub">Upload a receipt or fill in the details manually</div>
+      </div>
+      <div class="two-col">
+        <div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">📎 OCR Receipt Scanner</div></div>
+            <div class="ocr-zone" id="ocr-zone" onclick="simulateOCR()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')">
+              <div class="ocr-zone-icon">🧾</div>
+              <div class="ocr-zone-text">Click to scan receipt</div>
+              <div class="ocr-zone-sub">Auto-fills amount, date, description & vendor</div>
+            </div>
+            <div id="ocr-result" style="display:none" class="ocr-result">
+              <div class="ocr-result-title">✅ OCR Data Extracted</div>
+              <div id="ocr-data"></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Expense Details</div></div>
+            <div class="form-group">
+              <label class="form-label">Amount</label>
+              <input class="form-input" type="number" id="exp-amount" placeholder="0.00" oninput="convertCurrency()"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Currency</label>
+              <select class="form-input form-select" id="exp-currency" onchange="convertCurrency()">
+                <option value="INR">INR — Indian Rupee</option>
+                <option value="USD">USD — US Dollar</option>
+                <option value="EUR">EUR — Euro</option>
+                <option value="GBP">GBP — British Pound</option>
+                <option value="JPY">JPY — Japanese Yen</option>
+                <option value="AED">AED — UAE Dirham</option>
+              </select>
+            </div>
+            <div id="conversion-display" style="display:none" class="conversion-row">
+              <span id="conv-from"></span>
+              <span class="conversion-arrow">→</span>
+              <span id="conv-to" style="color:var(--green);font-weight:600"></span>
+              <span class="text-sm">(company currency)</span>
+            </div>
+            <div class="form-group mt-16">
+              <label class="form-label">Category</label>
+              <select class="form-input form-select" id="exp-category">
+                <option value="">Select category</option>
+                <option>Travel</option>
+                <option>Food & Dining</option>
+                <option>Accommodation</option>
+                <option>Office Supplies</option>
+                <option>Software & Subscriptions</option>
+                <option>Client Entertainment</option>
+                <option>Training & Education</option>
+                <option>Medical</option>
+                <option>Miscellaneous</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Vendor / Description</label>
+              <input class="form-input" id="exp-vendor" placeholder="e.g. Swiggy, Uber, Marriott..."/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date</label>
+              <input class="form-input" type="date" id="exp-date"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Notes (optional)</label>
+              <textarea class="form-input" id="exp-notes" rows="3" placeholder="Additional details..."></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="submitExpense()">Submit for Approval →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MY EXPENSES PAGE ── -->
+    <div id="page-my-expenses" class="page">
+      <div class="page-header flex-between">
+        <div>
+          <div class="page-title">My Expenses</div>
+          <div class="page-sub">Track all your submitted expenses</div>
+        </div>
+        <div class="search-bar"><span>🔍</span><input placeholder="Search expenses..." oninput="filterExpenses(this.value)"/></div>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Date</th><th>Vendor</th><th>Category</th><th>Amount</th><th>Company Amount</th><th>Status</th><th>Action</th></tr>
+            </thead>
+            <tbody id="my-expenses-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── APPROVALS PAGE ── -->
+    <div id="page-approvals" class="page">
+      <div class="page-header flex-between">
+        <div>
+          <div class="page-title">Pending Approvals</div>
+          <div class="page-sub">Review and approve expense requests</div>
+        </div>
+        <div id="approval-badge-count" class="currency-badge">0 pending</div>
+      </div>
+      <div id="approvals-list"></div>
+    </div>
+
+    <!-- ── ALL EXPENSES PAGE (Admin) ── -->
+    <div id="page-all-expenses" class="page">
+      <div class="page-header flex-between">
+        <div>
+          <div class="page-title">All Expenses</div>
+          <div class="page-sub">Company-wide expense overview</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Employee</th><th>Date</th><th>Vendor</th><th>Category</th><th>Amount (INR)</th><th>Status</th><th>Action</th></tr>
+            </thead>
+            <tbody id="all-expenses-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── USER MANAGEMENT PAGE ── -->
+    <div id="page-users" class="page">
+      <div class="page-header flex-between">
+        <div>
+          <div class="page-title">User Management</div>
+          <div class="page-sub">Manage employees, managers and roles</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-user')">+ Add User</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Name</th><th>Email</th><th>Role</th><th>Manager</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="users-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── APPROVAL RULES PAGE ── -->
+    <div id="page-rules" class="page">
+      <div class="page-header flex-between">
+        <div>
+          <div class="page-title">Approval Rules</div>
+          <div class="page-sub">Configure multi-level approval workflows</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-rule')">+ New Rule</button>
+      </div>
+      <div id="rules-list"></div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /screen-app -->
+
+<!-- ══════════════════════════════ MODALS ══════════════════════════════ -->
+
+<!-- Expense Detail Modal -->
+<div class="modal-overlay" id="modal-expense-detail">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Expense Details</div>
+      <button class="modal-close" onclick="closeModal('modal-expense-detail')">✕</button>
+    </div>
+    <div id="expense-detail-content"></div>
+    <div class="modal-actions" id="expense-detail-actions"></div>
+  </div>
+</div>
+
+<!-- Approve/Reject Modal -->
+<div class="modal-overlay" id="modal-approve">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="approve-modal-title">Review Expense</div>
+      <button class="modal-close" onclick="closeModal('modal-approve')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Comment (optional)</label>
+      <textarea class="form-input" id="approve-comment" rows="3" placeholder="Add a comment..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary btn-sm" onclick="closeModal('modal-approve')">Cancel</button>
+      <button class="btn btn-danger btn-sm" onclick="processApproval('reject')">✕ Reject</button>
+      <button class="btn btn-success btn-sm" onclick="processApproval('approve')">✓ Approve</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal-overlay" id="modal-add-user">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add New User</div>
+      <button class="modal-close" onclick="closeModal('modal-add-user')">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input class="form-input" id="new-user-name" placeholder="John Doe"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" id="new-user-email" placeholder="john@company.com"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Role</label>
+        <select class="form-input form-select" id="new-user-role" onchange="toggleManagerField()">
+          <option value="employee">Employee</option>
+          <option value="manager">Manager</option>
+        </select>
+      </div>
+      <div class="form-group" id="manager-select-group">
+        <label class="form-label">Assign Manager</label>
+        <select class="form-input form-select" id="new-user-manager">
+          <option value="">Select manager</option>
+        </select>
+      </div>
+      <div class="form-group" style="grid-column:1/-1;display:flex;align-items:center;gap:10px">
+        <input type="checkbox" id="new-user-is-manager-approver" style="width:16px;height:16px;accent-color:var(--accent)"/>
+        <label for="new-user-is-manager-approver" style="font-size:13px;color:var(--text2);cursor:pointer">IS MANAGER APPROVER (manager approves first)</label>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary btn-sm" onclick="closeModal('modal-add-user')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="addUser()">Add User</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Rule Modal -->
+<div class="modal-overlay" id="modal-add-rule">
+  <div class="modal" style="max-width:580px">
+    <div class="modal-header">
+      <div class="modal-title">Create Approval Rule</div>
+      <button class="modal-close" onclick="closeModal('modal-add-rule')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Rule Name</label>
+      <input class="form-input" id="rule-name" placeholder="e.g. Standard Expense Flow"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Threshold Amount (INR)</label>
+      <input class="form-input" type="number" id="rule-threshold" placeholder="e.g. 10000 (0 = apply always)"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Approval Type</label>
+      <select class="form-input form-select" id="rule-type" onchange="renderRuleConfig()">
+        <option value="sequential">Sequential (Step 1 → Step 2 → ...)</option>
+        <option value="percentage">Percentage (e.g. 60% must approve)</option>
+        <option value="specific">Specific Approver (auto-approve if X approves)</option>
+        <option value="hybrid">Hybrid (% OR specific approver)</option>
+      </select>
+    </div>
+    <div id="rule-config-area"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary btn-sm" onclick="closeModal('modal-add-rule')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveRule()">Save Rule</button>
+    </div>
+  </div>
+</div>
+
+<!-- Change Role Modal -->
+<div class="modal-overlay" id="modal-change-role">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">
+      <div class="modal-title">Change Role</div>
+      <button class="modal-close" onclick="closeModal('modal-change-role')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">New Role</label>
+      <select class="form-input form-select" id="change-role-select">
+        <option value="employee">Employee</option>
+        <option value="manager">Manager</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary btn-sm" onclick="closeModal('modal-change-role')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="confirmRoleChange()">Update Role</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════════════════════
+const DEMO_USERS = [
+  {id:1,name:'Arjun Sharma',email:'admin@demo.com',role:'admin',avatar:'A',company:'TechNova Pvt Ltd',currency:'INR',isManagerApprover:false,managerId:null},
+  {id:2,name:'Priya Nair',email:'manager@demo.com',role:'manager',avatar:'P',company:'TechNova Pvt Ltd',currency:'INR',isManagerApprover:true,managerId:null},
+  {id:3,name:'Rahul Mehta',email:'employee@demo.com',role:'employee',avatar:'R',company:'TechNova Pvt Ltd',currency:'INR',isManagerApprover:false,managerId:2},
+  {id:4,name:'Sneha Patel',email:'sneha@demo.com',role:'employee',avatar:'S',company:'TechNova Pvt Ltd',currency:'INR',isManagerApprover:false,managerId:2},
+  {id:5,name:'Kiran Desai',email:'kiran@demo.com',role:'manager',avatar:'K',company:'TechNova Pvt Ltd',currency:'INR',isManagerApprover:true,managerId:null},
+];
+
+const DEMO_EXPENSES = [
+  {id:1,userId:3,vendor:'Swiggy - Team Lunch',category:'Food & Dining',amount:4500,currency:'INR',amountINR:4500,date:'2026-03-20',notes:'Team lunch meeting',status:'approved',approvals:[{approverId:2,status:'approved',comment:'Approved. Valid team expense.',date:'2026-03-21'}]},
+  {id:2,userId:3,vendor:'Uber - Client Visit',category:'Travel',amount:85,currency:'USD',amountINR:7089,date:'2026-03-22',notes:'Client visit at Bandra',status:'pending',approvals:[{approverId:2,status:'pending',comment:'',date:null}]},
+  {id:3,userId:4,vendor:'Marriott - Mumbai',category:'Accommodation',amount:12000,currency:'INR',amountINR:12000,date:'2026-03-18',notes:'Client meeting overnight stay',status:'rejected',approvals:[{approverId:2,status:'rejected',comment:'Please book from approved hotels list.',date:'2026-03-19'}]},
+  {id:4,userId:3,vendor:'Adobe Creative Cloud',category:'Software & Subscriptions',amount:599,currency:'INR',amountINR:599,date:'2026-03-25',notes:'Design tools subscription',status:'pending',approvals:[{approverId:2,status:'pending',comment:'',date:null}]},
+  {id:5,userId:4,vendor:'Air India - Bangalore Trip',category:'Travel',amount:8500,currency:'INR',amountINR:8500,date:'2026-03-26',notes:'Conference attendance',status:'approved',approvals:[{approverId:2,status:'approved',comment:'',date:'2026-03-27'}]},
+];
+
+const DEMO_RULES = [
+  {id:1,name:'Standard Flow',threshold:0,type:'sequential',steps:[{approvers:[2],label:'Manager - Priya Nair'},{approvers:[1],label:'Admin - Arjun Sharma'}],percentage:null,specificApprover:null},
+  {id:2,name:'High Value (>₹10K)',threshold:10000,type:'hybrid',steps:[],percentage:60,specificApprover:1},
+];
+
+const RATES = {INR:1,USD:83.4,EUR:89.7,GBP:105.2,JPY:0.56,AED:22.7};
+
+let state = {
+  currentUser: null,
+  users: [...DEMO_USERS],
+  expenses: [...DEMO_EXPENSES],
+  rules: [...DEMO_RULES],
+  currentExpenseId: null,
+  changeRoleUserId: null,
+};
+
+// ════════════════════════════════════════════════════════════════════
+//  AUTH
+// ════════════════════════════════════════════════════════════════════
+function switchAuthTab(tab){
+  document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',i===(tab==='login'?0:1)));
+  document.getElementById('auth-login').style.display = tab==='login'?'block':'none';
+  document.getElementById('auth-signup').style.display = tab==='signup'?'block':'none';
+}
+
+function handleLogin(){
+  const email = document.getElementById('login-email').value.trim().toLowerCase();
+  const user = state.users.find(u=>u.email===email) || state.users[0];
+  loginUser(user);
+}
+
+function handleSignup(){
+  const name = document.getElementById('signup-name').value || 'New Admin';
+  const email = document.getElementById('signup-email').value || 'admin@newco.com';
+  const company = document.getElementById('signup-company').value || 'New Company';
+  const country = document.getElementById('signup-country').value;
+  const currMap = {IN:'INR',US:'USD',GB:'GBP',EU:'EUR',JP:'JPY'};
+  const currency = currMap[country]||'INR';
+  const newUser = {id:Date.now(),name,email,role:'admin',avatar:name[0].toUpperCase(),company,currency,isManagerApprover:false,managerId:null};
+  state.users.push(newUser);
+  showToast(`✨ Company "${company}" created with ${currency} currency!`,'success');
+  setTimeout(()=>loginUser(newUser),1200);
+}
+
+function loginUser(user){
+  state.currentUser = user;
+  setupApp();
+  document.getElementById('screen-auth').classList.remove('active');
+  document.getElementById('screen-app').classList.add('active');
+}
+
+function logout(){
+  state.currentUser = null;
+  document.getElementById('screen-app').classList.remove('active');
+  document.getElementById('screen-auth').classList.add('active');
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  APP SETUP
+// ════════════════════════════════════════════════════════════════════
+function setupApp(){
+  const u = state.currentUser;
+  document.getElementById('sidebar-name').textContent = u.name;
+  document.getElementById('sidebar-role').textContent = u.role.charAt(0).toUpperCase()+u.role.slice(1);
+  const av = document.getElementById('sidebar-avatar');
+  av.textContent = u.avatar;
+  av.className = `user-avatar avatar-${u.role}`;
+  renderNav();
+  navigateTo('dashboard');
+}
+
+function renderNav(){
+  const u = state.currentUser;
+  const allNav = {
+    admin:[
+      {id:'dashboard',icon:'⬛',label:'Dashboard'},
+      {id:'all-expenses',icon:'📋',label:'All Expenses'},
+      {id:'users',icon:'👥',label:'User Management'},
+      {id:'rules',icon:'⚙️',label:'Approval Rules'},
+    ],
+    manager:[
+      {id:'dashboard',icon:'⬛',label:'Dashboard'},
+      {id:'approvals',icon:'✅',label:'Pending Approvals',badge:true},
+    ],
+    employee:[
+      {id:'dashboard',icon:'⬛',label:'Dashboard'},
+      {id:'submit',icon:'➕',label:'Submit Expense'},
+      {id:'my-expenses',icon:'📄',label:'My Expenses'},
+    ],
+  };
+  const nav = allNav[u.role]||allNav.employee;
+  const pendingCount = state.expenses.filter(e=>e.status==='pending' && e.approvals.some(a=>a.approverId===u.id&&a.status==='pending')).length;
+  document.getElementById('nav-menu').innerHTML = nav.map(item=>`
+    <div class="nav-item" id="nav-${item.id}" onclick="navigateTo('${item.id}')">
+      <span class="nav-icon">${item.icon}</span>
+      ${item.label}
+      ${item.badge && pendingCount>0?`<span class="nav-badge">${pendingCount}</span>`:''}
+    </div>
+  `).join('');
+}
+
+function navigateTo(pageId){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const navEl = document.getElementById('nav-'+pageId);
+  if(navEl) navEl.classList.add('active');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const page = document.getElementById('page-'+pageId);
+  if(page) page.classList.add('active');
+  const renders = {
+    'dashboard':renderDashboard,
+    'my-expenses':renderMyExpenses,
+    'approvals':renderApprovals,
+    'all-expenses':renderAllExpenses,
+    'users':renderUsers,
+    'rules':renderRules,
+    'submit':setupSubmitForm,
+  };
+  if(renders[pageId]) renders[pageId]();
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  DASHBOARD
+// ════════════════════════════════════════════════════════════════════
+function renderDashboard(){
+  const u = state.currentUser;
+  document.getElementById('dash-greeting').textContent = `Hello, ${u.name.split(' ')[0]} 👋`;
+  document.getElementById('dash-company').textContent = `${u.company} · ${new Date().toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}`;
+  document.getElementById('dash-currency').textContent = u.currency||'INR';
+
+  const myExp = state.expenses.filter(e=>e.userId===u.id);
+  const allExp = state.expenses;
+  const pending = allExp.filter(e=>e.status==='pending').length;
+  const approved = allExp.filter(e=>e.status==='approved').length;
+  const totalINR = allExp.filter(e=>e.status==='approved').reduce((s,e)=>s+e.amountINR,0);
+
+  let stats = [];
+  if(u.role==='admin'){
+    stats=[
+      {label:'Total Users',value:state.users.length,icon:'👥',cls:'purple'},
+      {label:'All Expenses',value:allExp.length,icon:'📋',cls:'blue'},
+      {label:'Pending Approval',value:pending,icon:'⏳',cls:'amber'},
+      {label:'Total Reimbursed',value:'₹'+totalINR.toLocaleString('en-IN'),icon:'💰',cls:'green'},
+    ];
+  } else if(u.role==='manager'){
+    const myPending = state.expenses.filter(e=>e.approvals.some(a=>a.approverId===u.id&&a.status==='pending'));
+    stats=[
+      {label:'Pending My Approval',value:myPending.length,icon:'⏳',cls:'amber'},
+      {label:'Approved',value:approved,icon:'✅',cls:'green'},
+      {label:'Team Expenses',value:allExp.filter(e=>e.userId!==u.id).length,icon:'📋',cls:'blue'},
+      {label:'Total Value (INR)',value:'₹'+totalINR.toLocaleString('en-IN'),icon:'💰',cls:'purple'},
+    ];
+  } else {
+    stats=[
+      {label:'My Expenses',value:myExp.length,icon:'📄',cls:'blue'},
+      {label:'Pending',value:myExp.filter(e=>e.status==='pending').length,icon:'⏳',cls:'amber'},
+      {label:'Approved',value:myExp.filter(e=>e.status==='approved').length,icon:'✅',cls:'green'},
+      {label:'Rejected',value:myExp.filter(e=>e.status==='rejected').length,icon:'✕',cls:'red'},
+    ];
+  }
+
+  document.getElementById('dash-stats').innerHTML = stats.map(s=>`
+    <div class="stat-card ${s.cls}">
+      <div class="stat-icon">${s.icon}</div>
+      <div class="stat-value">${s.value}</div>
+      <div class="stat-label">${s.label}</div>
+    </div>
+  `).join('');
+
+  const recentExp = (u.role==='employee'?myExp:allExp).slice(-4).reverse();
+  document.getElementById('dash-recent-expenses').innerHTML = recentExp.length ? recentExp.map(e=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)" onclick="viewExpense(${e.id})" style="cursor:pointer">
+      <div>
+        <div style="font-size:13px;font-weight:500">${e.vendor}</div>
+        <div style="font-size:11px;color:var(--text3)">${e.category} · ${e.date}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:13px;font-weight:600;font-family:'Syne',sans-serif">₹${e.amountINR.toLocaleString()}</div>
+        <span class="badge badge-${e.status}">${e.status}</span>
+      </div>
+    </div>
+  `).join('') : '<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No expenses yet</div></div>';
+
+  // Pipeline
+  const pendingExp = state.expenses.filter(e=>e.status==='pending').slice(0,3);
+  document.getElementById('dash-pipeline').innerHTML = pendingExp.length ? pendingExp.map(e=>{
+    const owner = state.users.find(x=>x.id===e.userId);
+    return `
+    <div style="padding:12px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <div style="font-size:13px;font-weight:500">${e.vendor}</div>
+        <span class="badge badge-pending">pending</span>
+      </div>
+      <div style="font-size:11px;color:var(--text3)">${owner?.name||'Unknown'} · ₹${e.amountINR.toLocaleString()}</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${e.approvals.filter(a=>a.status==='approved').length/Math.max(e.approvals.length,1)*100}%"></div></div>
+    </div>`;
+  }).join('') : '<div class="empty-state"><div class="empty-icon">🎉</div><div class="empty-text">All caught up!</div></div>';
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  SUBMIT EXPENSE
+// ════════════════════════════════════════════════════════════════════
+function setupSubmitForm(){
+  document.getElementById('exp-date').value = new Date().toISOString().split('T')[0];
+}
+
+function simulateOCR(){
+  const samples = [
+    {vendor:'Zomato - Pizza Palace',amount:1250,currency:'INR',category:'Food & Dining',date:'2026-03-28'},
+    {vendor:'Uber Technologies',amount:34.50,currency:'USD',category:'Travel',date:'2026-03-27'},
+    {vendor:'Taj Hotel Mumbai',amount:15000,currency:'INR',category:'Accommodation',date:'2026-03-26'},
+    {vendor:'Microsoft 365',amount:699,currency:'INR',category:'Software & Subscriptions',date:'2026-03-25'},
+  ];
+  const s = samples[Math.floor(Math.random()*samples.length)];
+  document.getElementById('exp-vendor').value = s.vendor;
+  document.getElementById('exp-amount').value = s.amount;
+  document.getElementById('exp-currency').value = s.currency;
+  document.getElementById('exp-category').value = s.category;
+  document.getElementById('exp-date').value = s.date;
+  document.getElementById('ocr-result').style.display='block';
+  document.getElementById('ocr-data').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+      <div>Vendor: <strong>${s.vendor}</strong></div>
+      <div>Amount: <strong>${s.currency} ${s.amount}</strong></div>
+      <div>Category: <strong>${s.category}</strong></div>
+      <div>Date: <strong>${s.date}</strong></div>
+    </div>`;
+  convertCurrency();
+  showToast('✅ Receipt scanned successfully!','success');
+}
+
+function convertCurrency(){
+  const amount = parseFloat(document.getElementById('exp-amount').value)||0;
+  const currency = document.getElementById('exp-currency').value;
+  const userCurrency = state.currentUser?.currency||'INR';
+  if(amount>0 && currency!==userCurrency){
+    const inINR = amount * (RATES[currency]||1);
+    document.getElementById('conversion-display').style.display='flex';
+    document.getElementById('conv-from').textContent = `${currency} ${amount.toFixed(2)}`;
+    document.getElementById('conv-to').textContent = `${userCurrency} ${inINR.toFixed(2)}`;
+  } else {
+    document.getElementById('conversion-display').style.display='none';
+  }
+}
+
+function submitExpense(){
+  const amount = parseFloat(document.getElementById('exp-amount').value);
+  const currency = document.getElementById('exp-currency').value;
+  const category = document.getElementById('exp-category').value;
+  const vendor = document.getElementById('exp-vendor').value;
+  const date = document.getElementById('exp-date').value;
+  if(!amount||!category||!vendor||!date){showToast('Please fill all required fields','error');return;}
+  const amountINR = amount * (RATES[currency]||1);
+  const u = state.currentUser;
+  const managerUser = state.users.find(x=>x.id===u.managerId);
+  const approvals = [];
+  if(managerUser && managerUser.isManagerApprover){
+    approvals.push({approverId:managerUser.id,status:'pending',comment:'',date:null});
+  }
+  if(approvals.length===0){
+    const managers = state.users.filter(x=>x.role==='manager'||x.role==='admin');
+    if(managers[0]) approvals.push({approverId:managers[0].id,status:'pending',comment:'',date:null});
+  }
+  const newExp = {
+    id:Date.now(),userId:u.id,vendor,category,amount,currency,amountINR:Math.round(amountINR),
+    date,notes:document.getElementById('exp-notes').value,status:'pending',approvals
+  };
+  state.expenses.push(newExp);
+  document.getElementById('exp-amount').value='';
+  document.getElementById('exp-vendor').value='';
+  document.getElementById('exp-notes').value='';
+  document.getElementById('exp-category').value='';
+  document.getElementById('ocr-result').style.display='none';
+  document.getElementById('conversion-display').style.display='none';
+  showToast('✅ Expense submitted for approval!','success');
+  navigateTo('my-expenses');
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  MY EXPENSES
+// ════════════════════════════════════════════════════════════════════
+function renderMyExpenses(filter=''){
+  const u = state.currentUser;
+  let exps = state.expenses.filter(e=>e.userId===u.id);
+  if(filter) exps = exps.filter(e=>e.vendor.toLowerCase().includes(filter)||e.category.toLowerCase().includes(filter));
+  document.getElementById('my-expenses-table').innerHTML = exps.length ? exps.map(e=>`
+    <tr>
+      <td class="text-muted">${e.date}</td>
+      <td class="td-name">${e.vendor}</td>
+      <td><span class="badge-role badge-employee">${e.category}</span></td>
+      <td class="td-amount">${e.currency} ${e.amount.toLocaleString()}</td>
+      <td class="td-amount">₹${e.amountINR.toLocaleString()}</td>
+      <td><span class="badge badge-${e.status}">${e.status}</span></td>
+      <td><button class="btn btn-outline btn-sm" onclick="viewExpense(${e.id})">View</button></td>
+    </tr>
+  `).join('') : `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No expenses found</div></div></td></tr>`;
+}
+
+function filterExpenses(v){ renderMyExpenses(v.toLowerCase()); }
+
+// ════════════════════════════════════════════════════════════════════
+//  APPROVALS
+// ════════════════════════════════════════════════════════════════════
+function renderApprovals(){
+  const u = state.currentUser;
+  const myPending = state.expenses.filter(e=>
+    e.status==='pending' && e.approvals.some(a=>a.approverId===u.id && a.status==='pending')
+  );
+  document.getElementById('approval-badge-count').textContent = `${myPending.length} pending`;
+  if(myPending.length===0){
+    document.getElementById('approvals-list').innerHTML=`<div class="empty-state"><div class="empty-icon">🎉</div><div class="empty-text">No pending approvals — you're all caught up!</div></div>`;
+    return;
+  }
+  document.getElementById('approvals-list').innerHTML = myPending.map(e=>{
+    const owner = state.users.find(x=>x.id===e.userId);
+    return `
+    <div class="card" style="cursor:pointer" onclick="openApproveModal(${e.id})">
+      <div class="flex-between mb-16">
+        <div class="flex gap-12" style="align-items:center">
+          <div class="user-avatar avatar-employee" style="width:40px;height:40px;font-size:15px">${owner?.avatar||'?'}</div>
+          <div>
+            <div style="font-weight:600;font-size:15px">${e.vendor}</div>
+            <div class="text-sm">${owner?.name||'Unknown'} · ${e.date} · ${e.category}</div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800">₹${e.amountINR.toLocaleString()}</div>
+          <div class="text-sm">${e.currency} ${e.amount} (original)</div>
+        </div>
+      </div>
+      ${e.notes?`<div class="comment">${e.notes}</div>`:''}
+      <div style="margin-top:12px;font-size:12px;color:var(--text3)">Click to review →</div>
+    </div>`;
+  }).join('');
+}
+
+function openApproveModal(expId){
+  state.currentExpenseId = expId;
+  const e = state.expenses.find(x=>x.id===expId);
+  document.getElementById('approve-modal-title').textContent = `Review: ${e.vendor}`;
+  document.getElementById('approve-comment').value = '';
+  openModal('modal-approve');
+}
+
+function processApproval(action){
+  const e = state.expenses.find(x=>x.id===state.currentExpenseId);
+  const u = state.currentUser;
+  const comment = document.getElementById('approve-comment').value;
+  const approval = e.approvals.find(a=>a.approverId===u.id && a.status==='pending');
+  if(approval){
+    approval.status = action==='approve'?'approved':'rejected';
+    approval.comment = comment;
+    approval.date = new Date().toISOString().split('T')[0];
+  }
+  const allDone = e.approvals.every(a=>a.status!=='pending');
+  const anyRejected = e.approvals.some(a=>a.status==='rejected');
+  if(allDone) e.status = anyRejected?'rejected':'approved';
+  closeModal('modal-approve');
+  showToast(action==='approve'?'✅ Expense approved!':'✕ Expense rejected.', action==='approve'?'success':'error');
+  renderApprovals();
+  renderNav();
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  ALL EXPENSES (Admin)
+// ════════════════════════════════════════════════════════════════════
+function renderAllExpenses(){
+  document.getElementById('all-expenses-table').innerHTML = state.expenses.map(e=>{
+    const owner = state.users.find(x=>x.id===e.userId);
+    return `
+    <tr>
+      <td><div style="display:flex;align-items:center;gap:8px"><div class="user-avatar avatar-employee" style="width:28px;height:28px;font-size:11px">${owner?.avatar||'?'}</div>${owner?.name||'Unknown'}</div></td>
+      <td class="text-muted">${e.date}</td>
+      <td class="td-name">${e.vendor}</td>
+      <td>${e.category}</td>
+      <td class="td-amount">₹${e.amountINR.toLocaleString()}</td>
+      <td><span class="badge badge-${e.status}">${e.status}</span></td>
+      <td><button class="btn btn-outline btn-sm" onclick="viewExpense(${e.id})">View</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  VIEW EXPENSE DETAIL
+// ════════════════════════════════════════════════════════════════════
+function viewExpense(expId){
+  const e = state.expenses.find(x=>x.id===expId);
+  const owner = state.users.find(x=>x.id===e.userId);
+  document.getElementById('expense-detail-content').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+      <div class="stat-card blue" style="padding:14px"><div class="text-sm">Vendor</div><div style="font-weight:600;margin-top:4px">${e.vendor}</div></div>
+      <div class="stat-card green" style="padding:14px"><div class="text-sm">Amount (Company)</div><div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-top:4px">₹${e.amountINR.toLocaleString()}</div></div>
+      <div class="stat-card purple" style="padding:14px"><div class="text-sm">Original</div><div style="font-weight:600;margin-top:4px">${e.currency} ${e.amount}</div></div>
+      <div class="stat-card amber" style="padding:14px"><div class="text-sm">Status</div><div style="margin-top:4px"><span class="badge badge-${e.status}">${e.status}</span></div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:13px;margin-bottom:16px">
+      <div><span class="text-sm">Submitted by</span><div style="font-weight:500;margin-top:2px">${owner?.name||'Unknown'}</div></div>
+      <div><span class="text-sm">Date</span><div style="font-weight:500;margin-top:2px">${e.date}</div></div>
+      <div><span class="text-sm">Category</span><div style="font-weight:500;margin-top:2px">${e.category}</div></div>
+      <div><span class="text-sm">Exchange Rate</span><div style="font-weight:500;margin-top:2px">1 ${e.currency} = ₹${RATES[e.currency]||1}</div></div>
+    </div>
+    ${e.notes?`<div class="comment" style="margin-bottom:16px">${e.notes}</div>`:''}
+    <div class="divider"></div>
+    <div style="font-weight:600;font-size:14px;margin-bottom:12px">Approval Trail</div>
+    <div class="flow-steps">${e.approvals.map((a,i)=>{
+      const approver = state.users.find(x=>x.id===a.approverId);
+      const isLast = i===e.approvals.length-1;
+      return `
+      <div class="flow-step">
+        <div class="flow-step-line">
+          <div class="flow-step-dot ${a.status==='approved'?'done':a.status==='rejected'?'rejected':i===0?'active':''}">${i+1}</div>
+          ${!isLast?`<div class="flow-connector ${a.status==='approved'?'done':''}"></div>`:''}
+        </div>
+        <div class="flow-step-content">
+          <div class="flow-step-title">${approver?.name||'Unknown'} <span class="badge-role badge-${approver?.role||'employee'}">${approver?.role||''}</span></div>
+          <div class="flow-step-meta"><span class="badge badge-${a.status}">${a.status}</span>${a.date?` · ${a.date}`:''}</div>
+          ${a.comment?`<div class="comment" style="margin-top:8px">${a.comment}</div>`:''}
+        </div>
+      </div>`;
+    }).join('')}</div>`;
+  const u = state.currentUser;
+  const canApprove = e.status==='pending' && e.approvals.some(a=>a.approverId===u.id && a.status==='pending');
+  document.getElementById('expense-detail-actions').innerHTML = canApprove ? `
+    <button class="btn btn-secondary btn-sm" onclick="closeModal('modal-expense-detail')">Close</button>
+    <button class="btn btn-danger btn-sm" onclick="closeModal('modal-expense-detail');openApproveModal(${e.id})">Review</button>
+  ` : `<button class="btn btn-secondary btn-sm" onclick="closeModal('modal-expense-detail')">Close</button>`;
+  openModal('modal-expense-detail');
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  USER MANAGEMENT
+// ════════════════════════════════════════════════════════════════════
+function renderUsers(){
+  const managers = state.users.filter(u=>u.role==='manager');
+  const ms = document.getElementById('new-user-manager');
+  ms.innerHTML = '<option value="">No manager</option>' + managers.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+  document.getElementById('users-table').innerHTML = state.users.map(u=>`
+    <tr>
+      <td><div style="display:flex;align-items:center;gap:10px">
+        <div class="user-avatar avatar-${u.role}" style="width:32px;height:32px;font-size:12px">${u.avatar}</div>
+        <div><div style="font-weight:500">${u.name}</div>${u.isManagerApprover?'<div class="text-sm">Manager Approver</div>':''}</div>
+      </div></td>
+      <td class="text-muted">${u.email}</td>
+      <td><span class="badge-role badge-${u.role}">${u.role}</span></td>
+      <td class="text-muted">${u.managerId?state.users.find(x=>x.id===u.managerId)?.name||'—':'—'}</td>
+      <td><div style="display:flex;gap:6px">
+        <button class="btn btn-outline btn-sm" onclick="openChangeRole(${u.id})">Change Role</button>
+        ${u.id!==state.currentUser.id?`<button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id})">Delete</button>`:''}
+      </div></td>
+    </tr>
+  `).join('');
+}
+
+function toggleManagerField(){
+  const role = document.getElementById('new-user-role').value;
+  document.getElementById('manager-select-group').style.display = role==='employee'?'block':'none';
+}
+
+function addUser(){
+  const name = document.getElementById('new-user-name').value;
+  const email = document.getElementById('new-user-email').value;
+  const role = document.getElementById('new-user-role').value;
+  const managerId = parseInt(document.getElementById('new-user-manager').value)||null;
+  const isManagerApprover = document.getElementById('new-user-is-manager-approver').checked;
+  if(!name||!email){showToast('Name and email required','error');return;}
+  state.users.push({id:Date.now(),name,email,role,avatar:name[0].toUpperCase(),company:state.currentUser.company,currency:state.currentUser.currency,isManagerApprover,managerId});
+  closeModal('modal-add-user');
+  showToast(`✅ ${name} added as ${role}!`,'success');
+  renderUsers();
+}
+
+function deleteUser(id){
+  state.users = state.users.filter(u=>u.id!==id);
+  showToast('User removed','success');
+  renderUsers();
+}
+
+let changeRoleUserId = null;
+function openChangeRole(id){
+  changeRoleUserId = id;
+  const u = state.users.find(x=>x.id===id);
+  document.getElementById('change-role-select').value = u.role;
+  openModal('modal-change-role');
+}
+
+function confirmRoleChange(){
+  const newRole = document.getElementById('change-role-select').value;
+  const u = state.users.find(x=>x.id===changeRoleUserId);
+  u.role = newRole;
+  closeModal('modal-change-role');
+  showToast(`✅ Role updated to ${newRole}!`,'success');
+  renderUsers();
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  APPROVAL RULES
+// ════════════════════════════════════════════════════════════════════
+function renderRules(){
+  document.getElementById('rules-list').innerHTML = state.rules.length ? state.rules.map(r=>`
+    <div class="card">
+      <div class="flex-between mb-16">
+        <div>
+          <div style="font-size:16px;font-weight:700">${r.name}</div>
+          <div class="text-sm">Threshold: ${r.threshold>0?'₹'+r.threshold.toLocaleString():'Always apply'} · Type: <span class="rule-tag">${r.type}</span></div>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="deleteRule(${r.id})">Delete</button>
+      </div>
+      ${r.type==='sequential'?`
+        <div class="flow-steps">${r.steps.map((s,i)=>`
+          <div class="flow-step">
+            <div class="flow-step-line">
+              <div class="flow-step-dot active">${i+1}</div>
+              ${i<r.steps.length-1?'<div class="flow-connector"></div>':''}
+            </div>
+            <div class="flow-step-content">
+              <div class="flow-step-title">Step ${i+1}</div>
+              <div class="flow-step-meta">${s.label}</div>
+            </div>
+          </div>`).join('')}</div>
+      `:''}
+      ${r.type==='percentage'?`<div class="rule-row"><span class="rule-tag">%</span><span style="font-size:13px">If <strong>${r.percentage}%</strong> of approvers approve → Expense approved</span></div>`:''}
+      ${r.type==='specific'?`<div class="rule-row"><span class="rule-tag">⚡</span><span style="font-size:13px">If <strong>${state.users.find(x=>x.id===r.specificApprover)?.name||'Admin'}</strong> approves → Auto-approved</span></div>`:''}
+      ${r.type==='hybrid'?`<div class="rule-row"><span class="rule-tag">⚡</span><span style="font-size:13px"><strong>${r.percentage}%</strong> approval OR <strong>${state.users.find(x=>x.id===r.specificApprover)?.name||'Admin'}</strong> approves → Auto-approved</span></div>`:''}
+    </div>
+  `).join('') : `<div class="empty-state"><div class="empty-icon">⚙️</div><div class="empty-text">No rules configured yet</div></div>`;
+}
+
+function renderRuleConfig(){
+  const type = document.getElementById('rule-type').value;
+  const approvers = state.users.filter(u=>u.role==='manager'||u.role==='admin');
+  let html = '';
+  if(type==='sequential'){
+    html=`
+    <div class="rule-builder">
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px">Approval Steps</div>
+      <div id="sequential-steps">
+        <div class="step-card"><div class="step-number">Step 1</div>
+          <select class="form-input form-select" style="margin-top:4px" id="step-0">
+            ${approvers.map(a=>`<option value="${a.id}">${a.name} (${a.role})</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="addStep()">+ Add Step</button>
+    </div>`;
+  } else if(type==='percentage'){
+    html=`<div class="rule-builder"><div class="threshold-input"><input class="form-input" type="number" id="pct-value" placeholder="60" style="width:80px"/><span>% of approvers must approve</span></div></div>`;
+  } else if(type==='specific'){
+    html=`<div class="rule-builder"><div style="font-size:13px;margin-bottom:8px">Auto-approve if this person approves:</div><select class="form-input form-select" id="specific-approver">${approvers.map(a=>`<option value="${a.id}">${a.name} (${a.role})</option>`).join('')}</select></div>`;
+  } else if(type==='hybrid'){
+    html=`<div class="rule-builder">
+      <div class="threshold-input mb-16"><input class="form-input" type="number" id="hybrid-pct" placeholder="60" style="width:80px"/><span>% approval</span></div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:8px">OR if this person approves:</div>
+      <select class="form-input form-select" id="hybrid-approver">${approvers.map(a=>`<option value="${a.id}">${a.name} (${a.role})</option>`).join('')}</select>
+    </div>`;
+  }
+  document.getElementById('rule-config-area').innerHTML = html;
+}
+
+let stepCount = 1;
+function addStep(){
+  stepCount++;
+  const approvers = state.users.filter(u=>u.role==='manager'||u.role==='admin');
+  const div = document.createElement('div');
+  div.className='step-card';
+  div.innerHTML=`<div class="step-number">Step ${stepCount}</div><select class="form-input form-select" style="margin-top:4px" id="step-${stepCount-1}">${approvers.map(a=>`<option value="${a.id}">${a.name} (${a.role})</option>`).join('')}</select>`;
+  document.getElementById('sequential-steps').appendChild(div);
+}
+
+function saveRule(){
+  const name = document.getElementById('rule-name').value;
+  const threshold = parseInt(document.getElementById('rule-threshold').value)||0;
+  const type = document.getElementById('rule-type').value;
+  if(!name){showToast('Rule name required','error');return;}
+  let newRule = {id:Date.now(),name,threshold,type,steps:[],percentage:null,specificApprover:null};
+  if(type==='sequential'){
+    const steps = [];
+    for(let i=0;i<stepCount;i++){
+      const el=document.getElementById('step-'+i);
+      if(el){const user=state.users.find(x=>x.id===parseInt(el.value));steps.push({approvers:[parseInt(el.value)],label:user?.name||'Approver'});}
+    }
+    newRule.steps=steps;
+  } else if(type==='percentage'){
+    newRule.percentage=parseInt(document.getElementById('pct-value')?.value)||60;
+  } else if(type==='specific'){
+    newRule.specificApprover=parseInt(document.getElementById('specific-approver')?.value)||1;
+  } else if(type==='hybrid'){
+    newRule.percentage=parseInt(document.getElementById('hybrid-pct')?.value)||60;
+    newRule.specificApprover=parseInt(document.getElementById('hybrid-approver')?.value)||1;
+  }
+  state.rules.push(newRule);
+  stepCount=1;
+  closeModal('modal-add-rule');
+  showToast('✅ Approval rule saved!','success');
+  renderRules();
+}
+
+function deleteRule(id){
+  state.rules = state.rules.filter(r=>r.id!==id);
+  showToast('Rule deleted','success');
+  renderRules();
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  MODAL HELPERS
+// ════════════════════════════════════════════════════════════════════
+function openModal(id){
+  document.getElementById(id).classList.add('open');
+  if(id==='modal-add-rule') renderRuleConfig();
+}
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); });
+});
+
+// ════════════════════════════════════════════════════════════════════
+//  TOAST
+// ════════════════════════════════════════════════════════════════════
+function showToast(msg,type='success'){
+  const t=document.createElement('div');
+  t.className=`toast toast-${type}`;
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3000);
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════════════════
+document.getElementById('exp-date') && (document.getElementById('exp-date').value = new Date().toISOString().split('T')[0]);
+</script>
+</body>
+</html>
